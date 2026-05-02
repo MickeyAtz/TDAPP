@@ -5,6 +5,7 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -27,31 +28,35 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.mky.tdapp.data.remote.GrupoApi
 import com.mky.tdapp.data.remote.MateriaApi
 import com.mky.tdapp.data.remote.RetrofitInstance
+import com.mky.tdapp.data.repository.GrupoRepository
 import com.mky.tdapp.data.repository.MateriaRepository
 
 import com.mky.tdapp.ui.components.AppItemRow
 import com.mky.tdapp.ui.components.ScreenHeader
+import com.mky.tdapp.ui.viewmodel.GrupoViewModel
 import com.mky.tdapp.ui.viewmodel.MateriaViewModel
 
 @Preview(showBackground = true)
 @Composable
-fun MateriasScreen() {
+fun GruposScreen() {
 
     val context = LocalContext.current
 
-    val api = remember { RetrofitInstance.retrofit.create(MateriaApi::class.java) }
-    val repository = remember { MateriaRepository(api) }
-    val viewModel = remember { MateriaViewModel(repository) }
+    val api = remember { RetrofitInstance.retrofit.create(GrupoApi::class.java) }
+    val repository = remember { GrupoRepository(api) }
+    val viewModel = remember { GrupoViewModel(repository) }
 
     LaunchedEffect(Unit) {
-        viewModel.loadMaterias()
+        viewModel.loadGrupos()
     }
     // Estados del modal
     var showDialog by remember { mutableStateOf(false) }
-    var nombreMateria by remember { mutableStateOf("") }
-    var materiaEditId by remember {mutableStateOf<Int?>(null)}
+    var nombreGrupo by remember { mutableStateOf("") }
+    var cicloEscolarGrupo by remember { mutableStateOf("") }
+    var grupoEditedID by remember {mutableStateOf<String?>(null)}
 
 
 
@@ -82,7 +87,7 @@ fun MateriasScreen() {
                 .padding()
         ) {
             ScreenHeader(
-                title = "Materias",
+                title = "Grupos",
                 onButtonClick = {showDialog = true}
             )
 
@@ -90,16 +95,18 @@ fun MateriasScreen() {
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(viewModel.materias, key = { it.id }) { materia ->
+                items(viewModel.grupos, key = { it.id }) { grupo ->
                     AppItemRow(
-                        title = materia.nombre,
+                        title = grupo.nombre,
+                        subtitle = grupo.ciclo_escolar,
                         onEdit = {
-                            nombreMateria = materia.nombre
-                            materiaEditId = materia.id
+                            nombreGrupo = grupo.nombre
+                            cicloEscolarGrupo = grupo.ciclo_escolar
+                            grupoEditedID = grupo.id
                             showDialog = true
                         },
                         onDelete = {
-                            viewModel.deleteMateria(materia.id)
+                            viewModel.deleteGrupo(grupo.id)
                         }
                     )
                 }
@@ -112,7 +119,7 @@ fun MateriasScreen() {
             AlertDialog(
                 onDismissRequest = {
                     showDialog = false
-                    nombreMateria =  ""
+                    nombreGrupo =  ""
                 },
                 title = {
                     Text("Nueva materia")
@@ -120,9 +127,19 @@ fun MateriasScreen() {
                 text = {
                     Column {
                         OutlinedTextField(
-                            value = nombreMateria,
-                            onValueChange = {nombreMateria = it},
+                            value = nombreGrupo,
+                            onValueChange = {nombreGrupo = it},
                             label = {Text("Nombre")},
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Spacer(modifier = Modifier.padding(16.dp))
+
+                        OutlinedTextField(
+                            value = cicloEscolarGrupo,
+                            onValueChange = {cicloEscolarGrupo = it},
+                            label = {Text("Ciclo Escolar")},
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -131,27 +148,30 @@ fun MateriasScreen() {
                 confirmButton = {
                     TextButton(
                         onClick = {
-                            if(nombreMateria.isBlank()) return@TextButton
+                            if(nombreGrupo.isBlank() || cicloEscolarGrupo.isBlank()) return@TextButton
 
-                            if(materiaEditId == null) {
-                                viewModel.createMateria(nombreMateria) {
+                            if(grupoEditedID == null) {
+                                viewModel.createGrupo(nombreGrupo, cicloEscolarGrupo) {
                                     Toast
-                                        .makeText(context, "Materia creada", Toast.LENGTH_SHORT)
+                                        .makeText(context, "Grupo creado", Toast.LENGTH_SHORT)
                                         .show()
                                     showDialog = false
-                                    nombreMateria = ""
+                                    nombreGrupo = ""
+                                    cicloEscolarGrupo = ""
                                 }
                             } else {
-                                viewModel.updateMateria(
-                                    id = materiaEditId!!,
-                                    nombre = nombreMateria
+                                viewModel.updateGrupo(
+                                    id = grupoEditedID!!,
+                                    nombre = nombreGrupo,
+                                    cicloEscolar = cicloEscolarGrupo
                                 ) {
                                     Toast
-                                        .makeText(context, "Materia actualizada", Toast.LENGTH_SHORT)
+                                        .makeText(context, "Grupo actualizado", Toast.LENGTH_SHORT)
                                         .show()
                                     showDialog = false
-                                    nombreMateria = ""
-                                    materiaEditId = null
+                                    nombreGrupo = ""
+                                    grupoEditedID = null
+                                    cicloEscolarGrupo = ""
                                 }
                             }
 
@@ -165,7 +185,8 @@ fun MateriasScreen() {
                     TextButton(
                         onClick = {
                             showDialog = false
-                            nombreMateria = ""
+                            nombreGrupo = ""
+                            cicloEscolarGrupo = ""
                         }
                     ) {
                         Text("Cancelar")

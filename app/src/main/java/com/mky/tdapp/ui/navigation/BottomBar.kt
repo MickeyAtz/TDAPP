@@ -24,7 +24,7 @@ fun BottomBar(navController: NavController) {
 
     val items = listOf(
         Screen.Materias,
-        Screen.Perfil
+        Screen.Grupos
     )
 
     NavigationBar(
@@ -49,7 +49,7 @@ fun BottomBar(navController: NavController) {
                     Icon(
                         imageVector = when (screen) {
                             Screen.Materias -> Icons.Default.List
-                            Screen.Perfil -> Icons.Default.Person
+                            Screen.Grupos -> Icons.Default.Person
                             else -> Icons.Default.Home
                         },
                         contentDescription = null
@@ -60,7 +60,7 @@ fun BottomBar(navController: NavController) {
                     Text(
                         text = when (screen) {
                             Screen.Materias -> "Materias"
-                            Screen.Perfil -> "Perfil"
+                            Screen.Grupos -> "Grupos"
                             else -> ""
                         }
                     )
